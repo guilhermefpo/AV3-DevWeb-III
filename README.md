@@ -1,6 +1,6 @@
 # AutoManager
 
-> **Projeto AV1 Dev Web.**
+> **Projeto AV2 Dev Web.**
 
 ## Como funciona
 
@@ -67,6 +67,31 @@ Com o microsserviço em execução, utilize as rotas abaixo para realizar as req
 Você pode utilizar ferramentas como **Postman**, **Insomnia** ou outra ferramenta de sua preferência.
 
 > **Obs:** Verifique a documentação abaixo para saber quais endpoints estão disponíveis, quais métodos HTTP devem ser utilizados e quais dados devem ser enviados nas requisições.
+
+## Níveis de maturidade REST (RMM)
+
+O AutoManager atende aos quatro níveis do Richardson Maturity Model:
+
+1. **Nível 0 — HTTP:** a comunicação é realizada por HTTP.
+2. **Nível 1 — Recursos:** clientes, documentos, endereços e telefones possuem recursos e URLs próprios.
+3. **Nível 2 — Verbos e status:** a API utiliza `GET`, `POST`, `PUT` e `DELETE`, além dos status HTTP adequados (`200`, `201`, `204`, `400`, `404` e `409`).
+4. **Nível 3 — HATEOAS:** as respostas incluem links de navegação no campo `_links`, como `self`, `clientes`, `documentos`, `enderecos` e `telefones`.
+
+Exemplo resumido de resposta HATEOAS:
+
+```json
+{
+  "id": 1,
+  "nome": "João da Silva",
+  "cpf": "52982546727",
+  "_links": {
+    "self": { "href": "http://localhost:8080/cliente/1" },
+    "clientes": { "href": "http://localhost:8080/cliente" }
+  }
+}
+```
+
+Os links permitem que o consumidor navegue pela API sem precisar montar manualmente todas as URLs.
 
 ---
 

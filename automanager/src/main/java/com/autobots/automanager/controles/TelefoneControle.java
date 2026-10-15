@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import com.autobots.automanager.dtos.TelefoneDTO;
 import com.autobots.automanager.dtos.TelefoneRespostaDTO;
@@ -32,20 +34,20 @@ public class TelefoneControle {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TelefoneRespostaDTO obterTelefone(@PathVariable("id") long id) {
-        return servicos.buscarPorId(id);
+        return links(servicos.buscarPorId(id));
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<TelefoneRespostaDTO> obterTelefones() {
-        return servicos.buscarTelefones();
+        return servicos.buscarTelefones().stream().map(this::links).toList();
     }
 
     @PostMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public TelefoneRespostaDTO cadastrarTelefone(@Valid @RequestBody TelefoneDTO telefoneDto,
             @PathVariable("id") long id) {
-        return servicos.cadastrarTelefone(telefoneDto, id);
+        return links(servicos.cadastrarTelefone(telefoneDto, id));
     }
 
     @PutMapping("/{id}")
@@ -54,12 +56,18 @@ public class TelefoneControle {
             @PathVariable("id") long id,
             @RequestBody TelefoneDTO atualizacao) {
 
-        return servicos.atualizarTelefone(id, atualizacao);
+        return links(servicos.atualizarTelefone(id, atualizacao));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluirTelefone(@PathVariable("id") long id) {
         servicos.excluirTelefone(id);
+    }
+
+    private TelefoneRespostaDTO links(TelefoneRespostaDTO telefone) {
+        telefone.add(linkTo(methodOn(TelefoneControle.class).obterTelefone(telefone.getId())).withSelfRel());
+        telefone.add(linkTo(methodOn(TelefoneControle.class).obterTelefones()).withRel("telefones"));
+        return telefone;
     }
 }

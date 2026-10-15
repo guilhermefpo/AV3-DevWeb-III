@@ -29,6 +29,9 @@ public class AutomanagerApplication {
 
 		@Override
 		public void run(ApplicationArguments args) throws Exception {
+			if (repositorio.count() > 0) {
+				return;
+			}
 			Calendar calendario = Calendar.getInstance();
 			calendario.set(2002, 05, 15);
 

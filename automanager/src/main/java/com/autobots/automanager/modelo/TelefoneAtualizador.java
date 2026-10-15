@@ -23,13 +23,18 @@ public class TelefoneAtualizador {
 
 	public void atualizar(List<Telefone> telefones, List<Telefone> atualizacoes) {
 		for (Telefone atualizacao : atualizacoes) {
+            boolean encontrado = false;
 			for (Telefone telefone : telefones) {
 				if (atualizacao.getId() != null) {
 					if (atualizacao.getId().equals(telefone.getId())) {
 						atualizar(telefone, atualizacao);
+                        encontrado = true;
 					}
 				}
 			}
+            if (!encontrado) {
+                throw new IllegalArgumentException("Telefone informado não pertence ao cliente");
+            }
 		}
 	}
 

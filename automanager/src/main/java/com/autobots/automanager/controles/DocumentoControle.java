@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import com.autobots.automanager.dtos.DocumentoDTO;
 import com.autobots.automanager.dtos.DocumentoRespostaDTO;
@@ -31,26 +33,26 @@ public class DocumentoControle {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public DocumentoRespostaDTO buscarDocumento(@PathVariable("id") long id) {
-        return servicos.buscarPorId(id);
+        return links(servicos.buscarPorId(id));
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<DocumentoRespostaDTO> obterDocumentos() {
-        return servicos.buscarDocumentos();
+        return servicos.buscarDocumentos().stream().map(this::links).toList();
     }
 
     @PostMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentoRespostaDTO cadastrarDocumento(@Valid @RequestBody DocumentoDTO documentoDTO,
             @PathVariable("id") long id) {
-        return servicos.cadastrarDocumento(documentoDTO, id);
+        return links(servicos.cadastrarDocumento(documentoDTO, id));
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public DocumentoRespostaDTO atualizarDocumento(@PathVariable("id") long id, @RequestBody DocumentoDTO novosDados) {
-        return servicos.atualizarDocumento(id, novosDados);
+        return links(servicos.atualizarDocumento(id, novosDados));
     }
 
     @SuppressWarnings("null")
@@ -58,5 +60,11 @@ public class DocumentoControle {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluirDocumento(@PathVariable("id") long id) {
         servicos.excluirDocumento(id);
+    }
+
+    private DocumentoRespostaDTO links(DocumentoRespostaDTO documento) {
+        documento.add(linkTo(methodOn(DocumentoControle.class).buscarDocumento(documento.getId())).withSelfRel());
+        documento.add(linkTo(methodOn(DocumentoControle.class).obterDocumentos()).withRel("documentos"));
+        return documento;
     }
 }

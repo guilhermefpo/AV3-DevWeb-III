@@ -19,7 +19,7 @@ import com.autobots.automanager.repositorios.ClienteRepositorio;
 public class ClienteServicos {
 
     @Autowired
-    private ClienteRepositorio repositorio; // Devil Woman - Cliff Richard
+    private ClienteRepositorio repositorio;
 
     @Autowired
     private ClienteAtualizador atualizador;
@@ -49,13 +49,6 @@ public class ClienteServicos {
 
         Cliente dadosNovos = modelMapper.map(novosDados, Cliente.class);
 
-        if (cliente.getDocumentos() != null) {
-            cliente.getDocumentos().forEach(d -> d.setId(null));
-        }
-        if (cliente.getTelefones() != null) {
-            cliente.getTelefones().forEach(t -> t.setId(null));
-        }
-
         atualizador.atualizar(cliente, dadosNovos);
 
         @SuppressWarnings("null")
@@ -72,6 +65,16 @@ public class ClienteServicos {
         }
 
         Cliente cliente = modelMapper.map(novoCliente, Cliente.class);
+
+        if (cliente.getEndereco() != null) {
+            cliente.getEndereco().setId(null);
+        }
+        if (cliente.getDocumentos() != null) {
+            cliente.getDocumentos().forEach(documento -> documento.setId(null));
+        }
+        if (cliente.getTelefones() != null) {
+            cliente.getTelefones().forEach(telefone -> telefone.setId(null));
+        }
 
         @SuppressWarnings("null")
         Cliente clienteSalvo = repositorio.save(cliente);

@@ -1,9 +1,10 @@
 package com.autobots.automanager.dtos;
 
 import lombok.Data;
+import org.springframework.hateoas.RepresentationModel;
 
 @Data
-public class EnderecoRespostaDTO {
+public class EnderecoRespostaDTO extends RepresentationModel<EnderecoRespostaDTO> {
 
     private Long id;
     private String estado;

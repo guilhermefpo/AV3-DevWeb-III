@@ -23,13 +23,18 @@ public class DocumentoAtualizador {
 
 	public void atualizar(List<Documento> documentos, List<Documento> atualizacoes) {
 		for (Documento atualizacao : atualizacoes) {
+            boolean encontrado = false;
 			for (Documento documento : documentos) {
 				if (atualizacao.getId() != null) {
 					if (atualizacao.getId().equals(documento.getId())) {
 						atualizar(documento, atualizacao);
+                        encontrado = true;
 					}
 				}
 			}
+            if (!encontrado) {
+                throw new IllegalArgumentException("Documento informado não pertence ao cliente");
+            }
 		}
 	}
 }

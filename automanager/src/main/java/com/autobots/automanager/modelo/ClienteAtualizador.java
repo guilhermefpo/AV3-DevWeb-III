@@ -35,10 +35,14 @@ public class ClienteAtualizador {
 
 		atualizarDados(cliente, atualizacao);
 
-		if (atualizacao.getEndereco() != null && cliente.getEndereco() != null) {
-			enderecoAtualizador.atualizar(
-					cliente.getEndereco(),
-					atualizacao.getEndereco());
+        if (atualizacao.getEndereco() != null) {
+            if (cliente.getEndereco() == null) {
+                cliente.setEndereco(atualizacao.getEndereco());
+            } else {
+                enderecoAtualizador.atualizar(
+                        cliente.getEndereco(),
+                        atualizacao.getEndereco());
+            }
 		}
 
 		if (atualizacao.getDocumentos() != null) {

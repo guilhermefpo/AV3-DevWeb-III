@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import com.autobots.automanager.dtos.ClienteDTO;
 import com.autobots.automanager.dtos.ClienteRespostaDTO;
@@ -32,25 +34,31 @@ public class ClienteControle {
 	@GetMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	public ClienteRespostaDTO obterCliente(@PathVariable("id") long id) {
-		return servicos.buscarPorId(id);
+		return links(servicos.buscarPorId(id));
 	}
 
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
 	public List<ClienteRespostaDTO> obterClientes() {
-		return servicos.buscarClientes();
+		return servicos.buscarClientes().stream().map(this::links).toList();
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public ClienteRespostaDTO cadastrarCliente(@Valid @RequestBody ClienteDTO clienteDto) {
-		return servicos.cadastrarCliente(clienteDto);
+		return links(servicos.cadastrarCliente(clienteDto));
 	}
 
 	@PutMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	public ClienteRespostaDTO atualizarCliente(@PathVariable("id") long id, @RequestBody ClienteDTO atualizacao) {
-		return servicos.atualizarCliente(id, atualizacao);
+		return links(servicos.atualizarCliente(id, atualizacao));
+	}
+
+	private ClienteRespostaDTO links(ClienteRespostaDTO cliente) {
+		cliente.add(linkTo(methodOn(ClienteControle.class).obterCliente(cliente.getId())).withSelfRel());
+		cliente.add(linkTo(methodOn(ClienteControle.class).obterClientes()).withRel("clientes"));
+		return cliente;
 	}
 
 	@SuppressWarnings("null")
