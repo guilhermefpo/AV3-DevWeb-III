@@ -1,0 +1,55 @@
+package com.autobots.automanager.controles;
+
+import java.util.List;
+import javax.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import com.autobots.automanager.dtos.UsuarioDTO;
+import com.autobots.automanager.dtos.UsuarioRespostaDTO;
+import com.autobots.automanager.servicos.UsuarioServicos;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+@RestController
+@RequestMapping("/usuario")
+public class UsuarioControle {
+    private final UsuarioServicos s;
+
+    public UsuarioControle(UsuarioServicos s) {
+        this.s = s;
+    }
+
+    @GetMapping
+    public List<UsuarioRespostaDTO> listar() {
+        return s.listar().stream().map(this::links).toList();
+    }
+
+    @GetMapping("/{id}")
+    public UsuarioRespostaDTO buscar(@PathVariable Long id) {
+        return links(s.buscar(id));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UsuarioRespostaDTO cadastrar(@Valid @RequestBody UsuarioDTO e,
+            @RequestParam(required = false) Long empresaId) {
+        return links(s.salvar(null, e, empresaId));
+    }
+
+    @PutMapping("/{id}")
+    public UsuarioRespostaDTO atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO e,
+            @RequestParam(required = false) Long empresaId) {
+        return links(s.salvar(id, e, empresaId));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluir(@PathVariable Long id) {
+        s.excluir(id);
+    }
+
+    private UsuarioRespostaDTO links(UsuarioRespostaDTO e) {
+        e.add(linkTo(methodOn(UsuarioControle.class).buscar(e.getId())).withSelfRel());
+        e.add(linkTo(methodOn(UsuarioControle.class).listar()).withRel("usuarios"));
+        return e;
+    }
+}

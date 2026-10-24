@@ -4,14 +4,23 @@
 
 ## Como funciona
 
-O **AutoManager** é um microsserviço desenvolvido com **Spring Boot** para realizar operações CRUD de clientes e seus dados relacionados.
+O **AutoManager** é um microsserviço desenvolvido com **Spring Boot** para gerenciar empresas, usuários, clientes, veículos, serviços, mercadorias, ordens de serviço e vendas, além de seus dados relacionados.
 
-O sistema possui quatro recursos principais:
+O sistema possui os seguintes recursos:
 
 - **Cliente**
 - **Documento**
 - **Endereço**
 - **Telefone**
+- **Empresa**
+- **Usuário**
+- **Credencial**
+- **E-mail**
+- **Veículo**
+- **Serviço**
+- **Mercadoria**
+- **Ordem de serviço**
+- **Venda**
 
 Cada cliente pode possuir:
 
@@ -73,9 +82,9 @@ Você pode utilizar ferramentas como **Postman**, **Insomnia** ou outra ferramen
 O AutoManager atende aos quatro níveis do Richardson Maturity Model:
 
 1. **Nível 0 — HTTP:** a comunicação é realizada por HTTP.
-2. **Nível 1 — Recursos:** clientes, documentos, endereços e telefones possuem recursos e URLs próprios.
+2. **Nível 1 — Recursos:** os recursos do sistema possuem URLs próprias, como `/cliente`, `/empresa`, `/veiculo`, `/ordem-servico` e `/venda`.
 3. **Nível 2 — Verbos e status:** a API utiliza `GET`, `POST`, `PUT` e `DELETE`, além dos status HTTP adequados (`200`, `201`, `204`, `400`, `404` e `409`).
-4. **Nível 3 — HATEOAS:** as respostas incluem links de navegação no campo `_links`, como `self`, `clientes`, `documentos`, `enderecos` e `telefones`.
+4. **Nível 3 — HATEOAS:** as respostas dos recursos incluem links de navegação no campo `_links`, como `self` e o link para a coleção correspondente.
 
 Exemplo resumido de resposta HATEOAS:
 
@@ -373,6 +382,187 @@ Atualização parcial: só os campos enviados são alterados. O número não pod
 
 ---
 
+### 5. Empresas (`/empresa`)
+
+Empresas podem ser associadas a usuários, serviços, mercadorias, ordens de serviço e vendas.
+
+| Método | Endpoint | Status | Descrição |
+| :--- | :--- | :---: | :--- |
+| **GET** | `/empresa` | `200` | Lista empresas |
+| **GET** | `/empresa/{id}` | `200` | Busca uma empresa |
+| **POST** | `/empresa` | `201` | Cadastra uma empresa |
+| **PUT** | `/empresa/{id}` | `200` | Atualiza uma empresa |
+| **DELETE** | `/empresa/{id}` | `204` | Remove uma empresa |
+
+Campos: `nome` (obrigatório) e `cnpj` (opcional).
+
+Exemplo de cadastro:
+
+```http
+POST /empresa
+Content-Type: application/json
+
+{"nome":"Auto Peças Central","cnpj":"12345678000199"}
+```
+
+### 6. Usuários (`/usuario`)
+
+Usuários podem ter e-mail, credencial, empresa e veículos associados. O cadastro/atualização aceita `empresaId` como parâmetro de consulta opcional; para associar uma empresa, envie, por exemplo, `POST /usuario?empresaId=1`.
+
+| Método | Endpoint | Status | Descrição |
+| :--- | :--- | :---: | :--- |
+| **GET** | `/usuario` | `200` | Lista usuários |
+| **GET** | `/usuario/{id}` | `200` | Busca um usuário |
+| **POST** | `/usuario?empresaId={id}` | `201` | Cadastra um usuário |
+| **PUT** | `/usuario/{id}?empresaId={id}` | `200` | Atualiza um usuário |
+| **DELETE** | `/usuario/{id}` | `204` | Remove um usuário |
+
+Campos do corpo: `nome` (obrigatório), `documento`, `perfil` (obrigatório: `CLIENTE`, `FUNCIONARIO` ou `FORNECEDOR`), `email` (objeto com `endereco`) e `credencial` (objeto com `login` e `senha`). Documento e login devem ser únicos. Exemplo de cadastro:
+
+```http
+POST /usuario?empresaId=1
+Content-Type: application/json
+
+{
+  "nome": "Ana Souza",
+  "documento": "12345678900",
+  "perfil": "CLIENTE",
+  "email": { "endereco": "ana@example.com" },
+  "credencial": { "login": "ana", "senha": "senha-segura" }
+}
+```
+
+Para cadastrar sem associar uma empresa, use `POST /usuario` sem o parâmetro `empresaId`.
+
+```http
+PUT /usuario/2?empresaId=1
+Content-Type: application/json
+
+{
+  "nome": "Ana Souza Atualizada",
+  "documento": "12345678900",
+  "perfil": "CLIENTE"
+}
+```
+
+### 7. Credenciais (`/credencial`) e e-mails (`/email`)
+
+Ambos os recursos possuem operações `GET /{id}`, `GET` (lista), `POST` (`201`), `PUT /{id}` (`200`) e `DELETE /{id}` (`204`). Credencial recebe `login` e `senha`, ambos obrigatórios; login é único. E-mail recebe `endereco`, obrigatório e validado como endereço de e-mail; o endereço é único. As respostas de credencial expõem o login, sem retornar a senha. Usuários também podem receber esses dados aninhados no corpo de `/usuario`.
+
+Exemplos de cadastro independente:
+
+```http
+POST /credencial
+Content-Type: application/json
+
+{"login":"ana","senha":"senha-segura"}
+```
+
+```http
+POST /email
+Content-Type: application/json
+
+{"endereco":"ana@example.com"}
+```
+
+### 8. Veículos (`/veiculo`)
+
+Possuem operações `GET`, `GET /{id}`, `POST`, `PUT /{id}` e `DELETE /{id}`, com status `200`, `201`, `200` e `204`, respectivamente. O cadastro exige `usuarioId` na query string, por exemplo `POST /veiculo?usuarioId=1`; no `PUT`, esse parâmetro é opcional para alterar a associação.
+
+Campos: `tipo` (obrigatório: `HATCH`, `SEDAN`, `SUV`, `PICKUP` ou `SW`), `marca`, `modelo`, `placa` (obrigatória e única) e `ano`.
+
+Exemplo de cadastro associado ao usuário de ID `1`:
+
+```http
+POST /veiculo?usuarioId=1
+Content-Type: application/json
+
+{
+  "tipo": "SEDAN",
+  "marca": "Toyota",
+  "modelo": "Corolla",
+  "placa": "ABC1D23",
+  "ano": 2024
+}
+```
+
+### 9. Serviços (`/servico`) e mercadorias (`/mercadoria`)
+
+Ambos oferecem `GET`, `GET /{id}`, `POST`, `PUT /{id}` e `DELETE /{id}`. O cadastro exige o parâmetro `empresaId` (`POST /servico?empresaId=1` ou `POST /mercadoria?empresaId=1`); no `PUT`, ele é opcional.
+
+Serviço recebe `nome` (obrigatório), `descricao` e `preco` (obrigatório, maior ou igual a zero). Mercadoria recebe `nome` (obrigatório), `descricao`, `estoque` (opcional, maior ou igual a zero) e `preco` (obrigatório, maior ou igual a zero). As respostas incluem `empresaId`.
+
+Exemplos de cadastro associado à empresa de ID `1`:
+
+```http
+POST /servico?empresaId=1
+Content-Type: application/json
+
+{"nome":"Revisão básica","descricao":"Troca de óleo e filtros","preco":250.00}
+```
+
+```http
+POST /mercadoria?empresaId=1
+Content-Type: application/json
+
+{"nome":"Óleo 5W30","descricao":"Embalagem de 1 litro","estoque":20,"preco":45.90}
+```
+
+### 10. Ordens de serviço (`/ordem-servico`)
+
+| Método | Endpoint | Status | Descrição |
+| :--- | :--- | :---: | :--- |
+| **GET** | `/ordem-servico` | `200` | Lista ordens de serviço |
+| **GET** | `/ordem-servico/{id}` | `200` | Busca uma ordem |
+| **POST** | `/ordem-servico` | `201` | Cria uma ordem |
+| **PUT** | `/ordem-servico/{id}` | `200` | Atualiza uma ordem |
+| **DELETE** | `/ordem-servico/{id}` | `204` | Remove uma ordem |
+
+O corpo exige `empresaId`, `usuarioId`, `veiculoId` e `servicoId`. Também aceita `status` (`ABERTA`, `EM_ANDAMENTO`, `CONCLUIDA` ou `CANCELADA`) e `observacao`. Na criação, o status padrão é `ABERTA`; a empresa do serviço e o usuário associado ao veículo devem corresponder aos IDs informados. O valor cobrado é obtido do preço do serviço.
+
+Exemplo de cadastro:
+
+```http
+POST /ordem-servico
+Content-Type: application/json
+
+{
+  "empresaId": 1,
+  "usuarioId": 2,
+  "veiculoId": 3,
+  "servicoId": 4,
+  "observacao": "Cliente relata ruído ao frear"
+}
+```
+
+### 11. Vendas (`/venda`)
+
+| Método | Endpoint | Status | Descrição |
+| :--- | :--- | :---: | :--- |
+| **GET** | `/venda` | `200` | Lista vendas |
+| **GET** | `/venda/{id}` | `200` | Busca uma venda |
+| **POST** | `/venda` | `201` | Registra uma venda |
+| **PUT** | `/venda/{id}` | `200` | Atualiza uma venda |
+| **DELETE** | `/venda/{id}` | `204` | Remove uma venda |
+
+O corpo exige `empresaId`, `usuarioId` e ao menos um item em `itens`; cada item informa `mercadoriaId` e `quantidade` (maior que zero). `veiculoId` é opcional e, quando enviado, deve pertencer ao usuário informado. As mercadorias devem pertencer à empresa informada e ter estoque suficiente. O total e os subtotais são calculados usando os preços atuais, e o estoque é reduzido ao salvar; ao atualizar ou remover a venda, o estoque anterior é restaurado.
+
+Exemplo de cadastro:
+
+```http
+POST /venda
+Content-Type: application/json
+
+{
+  "empresaId": 1,
+  "usuarioId": 2,
+  "veiculoId": 3,
+  "itens": [{ "mercadoriaId": 4, "quantidade": 2 }]
+}
+```
+
+---
+
 ## Regras de validação
 
 | Recurso   | Campo                     | Regra                                                            |
@@ -385,25 +575,35 @@ Atualização parcial: só os campos enviados são alterados. O número não pod
 | Telefone  | `ddd`                     | Obrigatório, exatamente 2 números                                |
 | Telefone  | `numero`                  | Obrigatório, único (não pode repetir, mesmo com outro DDD)       |
 | Documento | `numero`                  | Obrigatório, único                                               |
+| Empresa   | `nome`                    | Obrigatório                                                      |
+| Usuário   | `nome`, `perfil`          | Obrigatórios                                                     |
+| E-mail    | `endereco`                | Obrigatório, formato válido e único                              |
+| Credencial| `login`, `senha`          | Obrigatórios; login único                                        |
+| Veículo   | `tipo`, `placa`           | Obrigatórios; placa única                                        |
+| Serviço   | `nome`, `preco`           | Obrigatórios; preço maior ou igual a zero                        |
+| Mercadoria| `nome`, `preco`           | Nome obrigatório; preço e estoque não podem ser negativos       |
+| Venda     | `itens`                   | Deve conter ao menos um item; quantidade maior que zero         |
+| Ordem de serviço | IDs de empresa, usuário, veículo e serviço | Obrigatórios; associações devem corresponder |
 
 ## Códigos de erro
 
 | Status | Quando acontece                                                                             |
 | :----: | :------------------------------------------------------------------------------------------ |
 | `400`  | Campo obrigatório ausente ou inválido, JSON inválido, ID inválido, tentativa de alterar CPF |
-| `404`  | Cliente, documento, endereço ou telefone não encontrado                                     |
-| `409`  | CPF, telefone ou documento já cadastrado                                                    |
+| `404`  | Recurso ou entidade relacionada não encontrada                                               |
+| `409`  | Valor único já cadastrado, como CPF, telefone, documento, placa, e-mail ou login             |
 
 ---
 
 ## Fluxo básico de utilização
 
-1. Cadastrar o cliente com `POST /cliente`.
-2. Utilizar o ID retornado para cadastrar seu endereço, documentos e telefones.
-3. Consultar o cliente através de `GET /cliente/{id}`.
-4. Atualizar cada recurso individualmente **ou** utilizar `PUT /cliente/{id}` para atualizar o cliente e seus dados relacionados de uma vez.
-5. Remover documentos, telefones ou endereço utilizando seus respectivos endpoints.
-6. Remover o cliente através de `DELETE /cliente/{id}`.
+1. Cadastrar uma empresa com `POST /empresa` quando os registros dependerem de uma empresa.
+2. Cadastrar o cliente com `POST /cliente` ou o usuário com `POST /usuario`.
+3. Utilizar os IDs retornados para cadastrar os dados associados, como endereço, documentos, telefones e veículos.
+4. Cadastrar serviços e mercadorias vinculados à empresa; depois, criar ordens de serviço ou vendas com os IDs necessários.
+5. Consultar os recursos através de `GET` e `GET /{id}`.
+6. Atualizar os recursos com seus respectivos endpoints `PUT`.
+7. Remover recursos com seus respectivos endpoints `DELETE`.
 
 > **Nota:** Certifique-se de informar corretamente os parâmetros de caminho (`{id}`) e o formato do payload em JSON no software de testes de requisições de sua preferência, como Postman, Insomnia ou Swagger.
 >
