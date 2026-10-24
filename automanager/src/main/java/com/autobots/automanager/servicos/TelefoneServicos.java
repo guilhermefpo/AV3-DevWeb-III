@@ -51,7 +51,7 @@ public class TelefoneServicos {
 
                 return modelMapper.map(
                                 telefone,
-                                TelefoneRespostaDTO.class);
+                                TelefoneRespostaDTO.class); // Bolsonaro Hipotético
         }
 
         public TelefoneRespostaDTO atualizarTelefone(
